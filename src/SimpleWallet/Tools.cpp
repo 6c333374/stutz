@@ -35,7 +35,7 @@ std::string formatAmount(uint64_t amount)
     uint64_t dollars = amount / 100;
     uint64_t cents = amount % 100;
 
-    return formatDollars(dollars) + "." + formatCents(cents) + " TRTL";
+    return formatDollars(dollars) + "." + formatCents(cents) + " STZ";
 }
 
 std::string formatDollars(uint64_t amount)
@@ -43,7 +43,7 @@ std::string formatDollars(uint64_t amount)
     /* We want to format our number with comma separators so it's easier to
        use. Now, we could use the nice print_money() function to do this.
        However, whilst this initially looks pretty handy, if we have a locale
-       such as ja_JP.utf8, 1 TRTL will actually be formatted as 100 TRTL, which
+       such as ja_JP.utf8, 1 STZ will actually be formatted as 100 STZ, which
        is terrible, and could really screw over users.
 
        So, easy solution right? Just use en_US.utf8! Sure, it's not very
@@ -55,7 +55,7 @@ std::string formatDollars(uint64_t amount)
        using the locale method, without writing a pretty long boiler plate
        function. So, instead, we define our own locale, which just returns
        the values we want.
-       
+
        It's less internationally friendly than we would potentially like
        but that would require a ton of scrutinization which if not done could
        land us with quite a few issues and rightfully angry users.
@@ -118,7 +118,7 @@ bool confirm(std::string msg)
         else if (c == std::ifstream::traits_type::eof())
         {
             return false;
-        } 
+        }
         else
         {
             std::cout << WarningMsg("Bad input: ") << InformationMsg(answer)

@@ -24,7 +24,7 @@ VS_VERSION_INFO VERSIONINFO
         VALUE "FileDescription",  PROJECT_DESCRIPTION
         VALUE "FileVersion",      PROJECT_VERSION_BUILD_NO
         VALUE "LegalCopyright",   PROJECT_COPYRIGHT
-        VALUE "OriginalFilename", "TurtleCoind.exe"
+        VALUE "OriginalFilename", "stutzd.exe"
         VALUE "ProductName",      PROJECT_NAME
         VALUE "ProductVersion",   PROJECT_VERSION
       END
@@ -34,4 +34,3 @@ VS_VERSION_INFO VERSIONINFO
       VALUE "Translation", 0x0, 1200
     END
   END
-

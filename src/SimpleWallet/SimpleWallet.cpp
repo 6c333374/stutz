@@ -1,4 +1,5 @@
 /*
+Copyright (C) 2018, The Stutz developers
 Copyright (C) 2018, The TurtleCoin developers
 
 This program is free software: you can redistribute it and/or modify
@@ -48,20 +49,20 @@ int main(int argc, char **argv)
     Logging::LoggerRef logger(logManager, "simplewallet");
 
     /* Currency contains our coin parameters, such as decimal places, supply */
-    CryptoNote::Currency currency 
+    CryptoNote::Currency currency
         = CryptoNote::CurrencyBuilder(logManager).currency();
 
     System::Dispatcher localDispatcher;
     System::Dispatcher *dispatcher = &localDispatcher;
 
-    /* Our connection to turtlecoind */
+    /* Our connection to stutzd */
     std::unique_ptr<CryptoNote::INode> node(
-        new CryptoNote::NodeRpcProxy(config.host, config.port, 
+        new CryptoNote::NodeRpcProxy(config.host, config.port,
                                      logger.getLogger()));
 
     std::promise<std::error_code> errorPromise;
     std::future<std::error_code> error = errorPromise.get_future();
-    auto callback = [&errorPromise](std::error_code e) 
+    auto callback = [&errorPromise](std::error_code e)
                     {errorPromise.set_value(e); };
 
     node->init(callback);
@@ -72,7 +73,7 @@ int main(int argc, char **argv)
     }
 
     /* Create the wallet instance */
-    CryptoNote::WalletGreen wallet(*dispatcher, currency, *node, 
+    CryptoNote::WalletGreen wallet(*dispatcher, currency, *node,
                                    logger.getLogger());
 
     /* Run the interactive wallet interface */
@@ -82,12 +83,12 @@ int main(int argc, char **argv)
 void run(CryptoNote::WalletGreen &wallet, CryptoNote::INode &node,
          Config &config)
 {
-    std::cout << InformationMsg("TurtleCoin v" + std::string(PROJECT_VERSION)
+    std::cout << InformationMsg("Stutz v" + std::string(PROJECT_VERSION)
                               + " Simplewallet") << std::endl;
 
     /* Open/import/generate the wallet */
     Action action = getAction(config);
-    std::shared_ptr<WalletInfo> walletInfo = handleAction(wallet, action, 
+    std::shared_ptr<WalletInfo> walletInfo = handleAction(wallet, action,
                                                           config);
 
     bool alreadyShuttingDown = false;
@@ -104,15 +105,15 @@ void run(CryptoNote::WalletGreen &wallet, CryptoNote::INode &node,
 
     while (node.getLastKnownBlockHeight() == 0)
     {
-        std::cout << WarningMsg("It looks like TurtleCoind isn't open!")
+        std::cout << WarningMsg("It looks like stutzd isn't open!")
                   << std::endl << std::endl
-                  << WarningMsg("Ensure TurtleCoind is open and has finished "
+                  << WarningMsg("Ensure stutzd is open and has finished "
                                 "initializing.")
                   << std::endl
                   << WarningMsg("If it's still not working, try restarting "
-                                "TurtleCoind. The daemon sometimes gets stuck.") 
+                                "stutzd. The daemon sometimes gets stuck.")
                   << std::endl
-                  << WarningMsg("Alternatively, perhaps TurtleCoind can't "
+                  << WarningMsg("Alternatively, perhaps stutzd can't "
                                 "communicate with any peers.")
                   << std::endl << std::endl
                   << WarningMsg("The wallet can't function until it can "
@@ -163,9 +164,9 @@ void run(CryptoNote::WalletGreen &wallet, CryptoNote::INode &node,
         std::cout << std::endl;
     }
 
-    /* Scan the chain for new transactions. In the case of an imported 
-       wallet, we need to scan the whole chain to find any transactions. 
-       If we opened the wallet however, we just need to scan from when we 
+    /* Scan the chain for new transactions. In the case of an imported
+       wallet, we need to scan the whole chain to find any transactions.
+       If we opened the wallet however, we just need to scan from when we
        last had it open. If we are generating a wallet, there is no need
        to check for transactions as there is no way the wallet can have
        received any money yet. */
@@ -233,7 +234,7 @@ std::shared_ptr<WalletInfo> createViewWallet(CryptoNote::WalletGreen &wallet)
 
     while (true)
     {
-        std::cout << "Public TRTL address: ";
+        std::cout << "Public STZ address: ";
 
         std::getline(std::cin, address);
         boost::algorithm::trim(address);
@@ -244,15 +245,15 @@ std::shared_ptr<WalletInfo> createViewWallet(CryptoNote::WalletGreen &wallet)
                       << "It should be 99 characters long, but it is "
                       << address.length() << " characters long!" << std::endl;
         }
-        else if (address.substr(0, 4) != "TRTL")
+        else if (address.substr(0, 4) != "ST")
         {
             std::cout << WarningMsg("Invalid address! It should start with "
-                                    "\"TRTL\"!") << std::endl;
+                                    "\"ST\"!") << std::endl;
         }
         else if (!CryptoNote::parseAccountAddressString(prefix, publicKeys,
                                                         address))
         {
-            std::cout << WarningMsg("Failed to parse TRTL address! Ensure you "
+            std::cout << WarningMsg("Failed to parse ST address! Ensure you "
                                     "have entered it correctly.")
                       << std::endl;
         }
@@ -268,13 +269,13 @@ std::shared_ptr<WalletInfo> createViewWallet(CryptoNote::WalletGreen &wallet)
     wallet.createViewWallet(walletFileName, walletPass, address,
                             privateViewKey);
 
-    std::cout << InformationMsg("\nYour view wallet " + address 
+    std::cout << InformationMsg("\nYour view wallet " + address
                               + " has been successfully imported!")
               << std::endl << std::endl;
 
     viewWalletMsg();
 
-    return std::make_shared<WalletInfo>(walletFileName, walletPass, 
+    return std::make_shared<WalletInfo>(walletFileName, walletPass,
                                         address, true, wallet);
 }
 
@@ -302,14 +303,14 @@ std::shared_ptr<WalletInfo> mnemonicImportWallet(CryptoNote::WalletGreen
     while (!crypto::ElectrumWords::is_valid_mnemonic(mnemonicPhrase,
                                                      privateSpendKey));
 
-    CryptoNote::AccountBase::generateViewFromSpend(privateSpendKey, 
+    CryptoNote::AccountBase::generateViewFromSpend(privateSpendKey,
                                                    privateViewKey);
 
     return importFromKeys(wallet, privateSpendKey, privateViewKey);
 }
 
 std::shared_ptr<WalletInfo> importFromKeys(CryptoNote::WalletGreen &wallet,
-                                           Crypto::SecretKey privateSpendKey, 
+                                           Crypto::SecretKey privateSpendKey,
                                            Crypto::SecretKey privateViewKey)
 {
     std::string walletFileName = getNewWalletFileName();
@@ -321,11 +322,11 @@ std::shared_ptr<WalletInfo> importFromKeys(CryptoNote::WalletGreen &wallet,
 
     std::string walletAddress = wallet.createAddress(privateSpendKey);
 
-    std::cout << InformationMsg("\nYour wallet " + walletAddress 
+    std::cout << InformationMsg("\nYour wallet " + walletAddress
                               + " has been successfully imported!")
               << std::endl << std::endl;
 
-    return std::make_shared<WalletInfo>(walletFileName, walletPass, 
+    return std::make_shared<WalletInfo>(walletFileName, walletPass,
                                         walletAddress, false, wallet);
 }
 
@@ -334,7 +335,7 @@ std::shared_ptr<WalletInfo> generateWallet(CryptoNote::WalletGreen &wallet)
     std::string walletFileName = getNewWalletFileName();
     std::string walletPass = getWalletPassword(true);
 
-    
+
     CryptoNote::KeyPair spendKey;
     Crypto::SecretKey privateViewKey;
 
@@ -386,7 +387,7 @@ std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet,
             wallet.load(walletFileName, walletPass);
 
             std::string walletAddress = wallet.getAddress(0);
-            
+
             Crypto::SecretKey privateSpendKey
                 = wallet.getAddressSpendKey(0).secretKey;
 
@@ -400,8 +401,8 @@ std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet,
 
                 viewWalletMsg();
 
-                return std::make_shared<WalletInfo>(walletFileName, walletPass, 
-                                                    walletAddress, true, 
+                return std::make_shared<WalletInfo>(walletFileName, walletPass,
+                                                    walletAddress, true,
                                                     wallet);
             }
             else
@@ -412,17 +413,17 @@ std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet,
                                           + " has been successfully opened!")
                           << std::endl << std::endl;
 
-                return std::make_shared<WalletInfo>(walletFileName, walletPass, 
-                                                    walletAddress, false, 
+                return std::make_shared<WalletInfo>(walletFileName, walletPass,
+                                                    walletAddress, false,
                                                     wallet);
             }
 
-            return std::make_shared<WalletInfo>(walletFileName, walletPass, 
+            return std::make_shared<WalletInfo>(walletFileName, walletPass,
                                                 walletAddress, false, wallet);
         }
         catch (const std::system_error& e)
         {
-            std::string walletSuccessBadPwdMsg = 
+            std::string walletSuccessBadPwdMsg =
                 "Restored view public key doesn't correspond to secret key: "
                 "The password is wrong";
 
@@ -441,10 +442,10 @@ std::shared_ptr<WalletInfo> openWallet(CryptoNote::WalletGreen &wallet,
                 "Unsupported wallet version: Wrong version";
 
             std::string errorMsg = e.what();
-                
+
             /* There are three different error messages depending upon if we're
                opening a walletgreen or a walletlegacy wallet */
-            if (errorMsg == walletSuccessBadPwdMsg || 
+            if (errorMsg == walletSuccessBadPwdMsg ||
                 errorMsg == walletSuccessBadPwdMsg2 ||
                 errorMsg == walletLegacyBadPwdMsg)
             {
@@ -522,7 +523,7 @@ Crypto::SecretKey getPrivateKey(std::string msg)
                                     "characters! Try again.") << std::endl;
             continue;
         }
-        else if (!Common::fromHex(privateKeyString, &privateKeyHash, 
+        else if (!Common::fromHex(privateKeyString, &privateKeyHash,
                   sizeof(privateKeyHash), size)
                  || size != sizeof(privateKeyHash))
         {
@@ -586,7 +587,7 @@ std::string getExistingWalletFileName(Config &config)
         }
         else
         {
-            std::cout << WarningMsg("A wallet with the filename " 
+            std::cout << WarningMsg("A wallet with the filename "
                                   + walletFileName + " doesn't exist!")
                       << std::endl
                       << "Ensure you entered your wallet name correctly."
@@ -608,7 +609,7 @@ std::string getNewWalletFileName()
 
         if (boost::filesystem::exists(walletFileName))
         {
-            std::cout << WarningMsg("A wallet with the filename " 
+            std::cout << WarningMsg("A wallet with the filename "
                                   + walletFileName + " already exists!")
                       << std::endl
                       << "Try another name." << std::endl;
@@ -643,19 +644,19 @@ Action getAction(Config &config)
     {
         std::cout << std::endl << "Welcome, please choose an option below:"
                   << std::endl << std::endl
-                  
+
                   << "\t[" << InformationMsg("G") << "] - "
                   << "Generate a new wallet address"
-                  << std::endl 
+                  << std::endl
 
                   << "\t[" << InformationMsg("O") << "] - "
                   << "Open a wallet already on your system"
                   << std::endl
-                  
+
                   << "\t[" << InformationMsg("S") << "] - "
                   << "Regenerate your wallet using a seed phrase of words"
                   << std::endl
-                  
+
                   << "\t[" << InformationMsg("I") << "] - "
                   << "Import your wallet using a View Key and Spend Key"
                   << std::endl
@@ -703,7 +704,7 @@ void promptSaveKeys(CryptoNote::WalletGreen &wallet)
 {
     std::cout << "Welcome to your new wallet, here is your payment address:"
               << std::endl << InformationMsg(wallet.getAddress(0))
-              << std::endl << std::endl 
+              << std::endl << std::endl
               << "Please copy your secret keys and mnemonic seed and store "
               << "them in a secure location: " << std::endl;
 
@@ -724,7 +725,7 @@ void printPrivateKeys(CryptoNote::WalletGreen &wallet, bool viewWallet)
 
     if (viewWallet)
     {
-        std::cout << SuccessMsg("Private view key: " 
+        std::cout << SuccessMsg("Private view key: "
                               + Common::podToHex(privateViewKey)) << std::endl;
         return;
     }
@@ -738,16 +739,16 @@ void printPrivateKeys(CryptoNote::WalletGreen &wallet, bool viewWallet)
 
     bool deterministicPrivateKeys = derivedPrivateViewKey == privateViewKey;
 
-    std::cout << SuccessMsg("Private spend key: " 
+    std::cout << SuccessMsg("Private spend key: "
                           + Common::podToHex(privateSpendKey)) << std::endl
-              << SuccessMsg("Private view key: " 
+              << SuccessMsg("Private view key: "
                           + Common::podToHex(privateViewKey)) << std::endl;
 
     if (deterministicPrivateKeys)
     {
         std::string mnemonicSeed;
 
-        crypto::ElectrumWords::bytes_to_words(privateSpendKey, 
+        crypto::ElectrumWords::bytes_to_words(privateSpendKey,
                                               mnemonicSeed,
                                               "English");
 
@@ -757,7 +758,7 @@ void printPrivateKeys(CryptoNote::WalletGreen &wallet, bool viewWallet)
 
 void welcomeMsg()
 {
-    std::cout << "Use the " << SuggestionMsg("help") 
+    std::cout << "Use the " << SuggestionMsg("help")
               << " command to see the list "
               << "of available commands." << std::endl << "Use "
               << SuggestionMsg("exit") << " when closing to ensure your wallet "
@@ -802,7 +803,7 @@ std::string getInputAndDoWorkWhileIdle(std::shared_ptr<WalletInfo> &walletInfo)
 }
 
 void inputLoop(std::shared_ptr<WalletInfo> &walletInfo, CryptoNote::INode &node)
-{ 
+{
     while (true)
     {
         std::cout << getPrompt(walletInfo);
@@ -810,7 +811,7 @@ void inputLoop(std::shared_ptr<WalletInfo> &walletInfo, CryptoNote::INode &node)
         std::string command = getInputAndDoWorkWhileIdle(walletInfo);
 
         /* Split into args to support legacy transfer command, for example
-           transfer 5 TRTLxyz... 100, sends 100 TRTL to TRTLxyz... with a mixin
+           transfer 5 STZxyz... 100, sends 100 STZ to STZxyz... with a mixin
            of 5 */
         std::vector<std::string> words;
         words = boost::split(words, command, ::isspace);
@@ -888,16 +889,16 @@ void inputLoop(std::shared_ptr<WalletInfo> &walletInfo, CryptoNote::INode &node)
             }
             else
             {
-                std::cout << "Unknown command: " << WarningMsg(command) 
-                          << ", use " << SuggestionMsg("help") 
+                std::cout << "Unknown command: " << WarningMsg(command)
+                          << ", use " << SuggestionMsg("help")
                           << " command to list all possible commands."
                           << std::endl;
             }
         }
         else
         {
-            std::cout << "Unknown command: " << WarningMsg(command) 
-                      << ", use " << SuggestionMsg("help") 
+            std::cout << "Unknown command: " << WarningMsg(command)
+                      << ", use " << SuggestionMsg("help")
                       << " command to list all possible commands." << std::endl
                       << "Please note some commands such as transfer are "
                       << "unavailable, as you are using a view only wallet."
@@ -916,7 +917,7 @@ void help(bool viewWallet)
               << SuccessMsg("bc_height", 25)
               << "Show the blockchain height" << std::endl
               << SuccessMsg("balance", 25)
-              << "Display how much TRTL you have" << std::endl
+              << "Display how much STZ you have" << std::endl
               << SuccessMsg("export_keys", 25)
               << "Export your private keys" << std::endl
               << SuccessMsg("address", 25)
@@ -927,11 +928,11 @@ void help(bool viewWallet)
               << "Save your wallet state" << std::endl
               << SuccessMsg("incoming_transfers", 25)
               << "Show incoming transfers" << std::endl;
-                  
+
     if (viewWallet)
     {
         std::cout << InformationMsg("Please note you are using a view only "
-                                    "wallet, and so cannot transfer TRTL.")
+                                    "wallet, and so cannot transfer STZ.")
                   << std::endl;
     }
     else
@@ -947,7 +948,7 @@ void help(bool viewWallet)
                   << "Fully optimize your wallet to send large amounts"
                   << std::endl
                   << SuccessMsg("transfer", 25)
-                  << "Send TRTL to someone" << std::endl;
+                  << "Send STZ to someone" << std::endl;
     }
 }
 
@@ -971,7 +972,7 @@ void balance(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet,
 
     if (viewWallet)
     {
-        std::cout << std::endl 
+        std::cout << std::endl
                   << InformationMsg("Please note that view only wallets "
                                     "can only track incoming transactions, "
                                     "and so your wallet balance may appear "
@@ -1038,7 +1039,7 @@ void blockchainHeight(CryptoNote::INode &node, CryptoNote::WalletGreen &wallet)
     if (localHeight == 0 && remoteHeight == 0)
     {
         std::cout << WarningMsg("Uh oh, it looks like you don't have "
-                                "TurtleCoind open!")
+                                "stutzd open!")
                   << std::endl;
     }
     else if (walletHeight + 1000 < remoteHeight && localHeight == remoteHeight)
@@ -1066,7 +1067,7 @@ bool shutdown(CryptoNote::WalletGreen &wallet, CryptoNote::INode &node,
 {
     if (alreadyShuttingDown)
     {
-        std::cout << "Patience little turtle, we're already shutting down!" 
+        std::cout << "Patience we're already shutting down!"
                   << std::endl;
         return false;
     }
@@ -1120,7 +1121,7 @@ CryptoNote::BlockDetails getBlock(uint32_t blockHeight,
 {
     CryptoNote::BlockDetails block;
 
-    /* No connection to turtlecoind */
+    /* No connection to stutzd */
     if (node.getLastKnownBlockHeight() == 0)
     {
         return block;
@@ -1139,7 +1140,7 @@ CryptoNote::BlockDetails getBlock(uint32_t blockHeight,
 
     if (e.get())
     {
-        std::cout << "Failed to retrieve block from node, is TurtleCoind "
+        std::cout << "Failed to retrieve block from node, is stutzd "
                   << "open?" << std::endl;
     }
 
@@ -1150,7 +1151,7 @@ std::string getBlockTime(CryptoNote::BlockDetails b)
 {
     if (b.timestamp == 0)
     {
-        return "Failed to get timestamp, is TurtleCoind open?";
+        return "Failed to get timestamp, is stutzd open?";
     }
 
     std::time_t time = b.timestamp;
@@ -1165,7 +1166,7 @@ void printOutgoingTransfer(CryptoNote::WalletTransaction t,
     std::string blockTime = getBlockTime(getBlock(t.blockHeight, node));
 
     std::cout << WarningMsg("Outgoing transfer: " + Common::podToHex(t.hash) +
-                            "\nSpent: " + formatAmount(-t.totalAmount - t.fee) + 
+                            "\nSpent: " + formatAmount(-t.totalAmount - t.fee) +
                             "\nFee: " + formatAmount(t.fee) +
                             "\nTotal Spent: " + formatAmount(-t.totalAmount) +
                             "\nTimestamp: " + blockTime)
@@ -1183,7 +1184,7 @@ void printIncomingTransfer(CryptoNote::WalletTransaction t,
               << std::endl << std::endl;
 }
 
-void listTransfers(bool incoming, bool outgoing, 
+void listTransfers(bool incoming, bool outgoing,
                    CryptoNote::WalletGreen &wallet, CryptoNote::INode &node)
 {
     size_t numTransactions = wallet.getTransactionCount();
@@ -1208,7 +1209,7 @@ void listTransfers(bool incoming, bool outgoing,
 
     if (incoming)
     {
-        std::cout << SuccessMsg("Total received: " 
+        std::cout << SuccessMsg("Total received: "
                               + formatAmount(totalReceived))
                   << std::endl;
     }
@@ -1228,10 +1229,10 @@ void checkForNewTransactions(std::shared_ptr<WalletInfo> &walletInfo)
 
     if (newTransactionCount != walletInfo->knownTransactionCount)
     {
-        for (size_t i = walletInfo->knownTransactionCount; 
+        for (size_t i = walletInfo->knownTransactionCount;
                     i < newTransactionCount; i++)
         {
-            CryptoNote::WalletTransaction t 
+            CryptoNote::WalletTransaction t
                 = walletInfo->wallet.getTransaction(i);
 
             /* Don't print outgoing or fusion transfers */
@@ -1240,9 +1241,9 @@ void checkForNewTransactions(std::shared_ptr<WalletInfo> &walletInfo)
                 std::cout << std::endl
                           << InformationMsg("New transaction found!")
                           << std::endl
-                          << SuccessMsg("Incoming transfer: " 
+                          << SuccessMsg("Incoming transfer: "
                                     + Common::podToHex(t.hash) +
-                                      "\nAmount: " 
+                                      "\nAmount: "
                                     + formatAmount(t.totalAmount))
                           << std::endl
                           << getPrompt(walletInfo)
@@ -1272,7 +1273,7 @@ void reset(CryptoNote::INode &node, std::shared_ptr<WalletInfo> &walletInfo)
     findNewTransactions(node, walletInfo);
 }
 
-void findNewTransactions(CryptoNote::INode &node, 
+void findNewTransactions(CryptoNote::INode &node,
                          std::shared_ptr<WalletInfo> &walletInfo)
 {
     uint32_t localHeight = node.getLastLocalBlockHeight();
@@ -1285,7 +1286,7 @@ void findNewTransactions(CryptoNote::INode &node,
 
     if (localHeight != remoteHeight)
     {
-        std::cout << "Your TurtleCoind isn't fully synced yet!" << std::endl
+        std::cout << "Your stutzd isn't fully synced yet!" << std::endl
                   << "Until you are fully synced, you won't be able to send "
                   << "transactions, and your balance may be missing or "
                   << "incorrect!" << std::endl << std::endl;
@@ -1342,9 +1343,7 @@ void findNewTransactions(CryptoNote::INode &node,
             if (stuckCounter > 20)
             {
                 std::string warning =
-                    "Syncing may be stuck. Try restarting Turtlecoind.\n"
-                    "If this persists, visit "
-                    "https://turtlecoin.lol/#contact for support.";
+                    "Syncing may be stuck. Try restarting stutzd.\n"
                 std::cout << WarningMsg(warning) << std::endl;
             }
             else if (stuckCounter > 19)
@@ -1415,7 +1414,7 @@ ColouredMsg getPrompt(std::shared_ptr<WalletInfo> &walletInfo)
     std::string walletName = walletInfo->walletFileName;
 
     /* Filename ends in .wallet, remove extension */
-    if (std::equal(extension.rbegin(), extension.rend(), 
+    if (std::equal(extension.rbegin(), extension.rend(),
                    walletInfo->walletFileName.rbegin()))
     {
         size_t extPos = walletInfo->walletFileName.find_last_of('.');
@@ -1425,12 +1424,12 @@ ColouredMsg getPrompt(std::shared_ptr<WalletInfo> &walletInfo)
 
     std::string shortName = walletName.substr(0, promptLength);
 
-    return InformationMsg("[TRTL " + shortName + "]: ");
+    return InformationMsg("[STZ " + shortName + "]: ");
 }
 
 void connectingMsg()
 {
-    std::cout << std::endl << "Making initial contact with TurtleCoind."
+    std::cout << std::endl << "Making initial contact with stutzd."
               << std::endl
               << "Please wait, this sometimes can take a long time..."
               << std::endl << std::endl;
@@ -1440,9 +1439,9 @@ void viewWalletMsg()
 {
     std::cout << InformationMsg("Please remember that when using a view wallet "
                                 "you can only view incoming transactions!")
-              << std::endl << "This means if you received 100 TRTL and then "
-              << "sent 50 TRTL, your balance would appear to still be 100 "
-              << "TRTL." << std::endl
+              << std::endl << "This means if you received 100 STZ and then "
+              << "sent 50 STZ, your balance would appear to still be 100 "
+              << "STZ." << std::endl
               << "To effectively use a view wallet, you should only deposit "
               << "to this wallet." << std::endl
               << "If you have since needed to withdraw, send your remaining "

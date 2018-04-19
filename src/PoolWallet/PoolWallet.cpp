@@ -437,7 +437,7 @@ bool pool_wallet::init(const boost::program_options::variables_map& vm) {
   if (m_generate_new.empty() && m_wallet_file_arg.empty()) {
 
     std::cout << std::endl << "Welcome, please choose an option below:"
-              << std::endl 
+              << std::endl
               << std::endl << "\t[G] - Generate a new wallet address"
               << std::endl << "\t[O] - Open a wallet already on your system"
               << std::endl << "\t[S] - Regenerate your wallet using a seed phrase of words"
@@ -446,7 +446,7 @@ bool pool_wallet::init(const boost::program_options::variables_map& vm) {
               << std::flush;
 
     char c;
-    
+
     do {
       std::string answer;
       std::getline(std::cin, answer);
@@ -477,7 +477,7 @@ bool pool_wallet::init(const boost::program_options::variables_map& vm) {
 
       std::getline(std::cin, userInput);
       boost::algorithm::trim(userInput);
-      
+
       if (c != 'o') {
         std::string ignoredString;
         std::string walletFileName;
@@ -571,7 +571,7 @@ bool pool_wallet::init(const boost::program_options::variables_map& vm) {
     fail_msg_writer() << "failed to init NodeRPCProxy: " << error.message();
     return false;
   }
-  
+
   sync_from_zero = command_line::get_arg(vm, arg_SYNC_FROM_ZERO);
   if (sync_from_zero) {
     sync_from_height = 0;
@@ -666,7 +666,7 @@ bool pool_wallet::init(const boost::program_options::variables_map& vm) {
       private_spend_key = *(struct Crypto::SecretKey *) &private_spend_key_hash;
       private_view_key = *(struct Crypto::SecretKey *) &private_view_key_hash;
     }
-    
+
     if (!new_wallet(private_spend_key, private_view_key, walletFileName, m_pwd_container.password())) {
       logger(ERROR, BRIGHT_RED) << "account creation failed";
       return false;
@@ -760,7 +760,7 @@ bool pool_wallet::is_valid_mnemonic(std::string &mnemonic_phrase, Crypto::Secret
 
   //static std::string languages[] = {"English", "Nederlands", "Français", "Português", "Italiano", "Deutsch", "русский язык", "简体中文 (中国)", "Esperanto", "Lojban"};
   static std::string languages[] = {"English"};
-  
+
   //static const int num_of_languages = 10;
   static const int num_of_languages = 1;
 
@@ -1151,7 +1151,7 @@ bool pool_wallet::export_keys(const std::vector<std::string>& args) {
   bool deterministic_private_keys = deterministic_private_view_key == keys.viewSecretKey;
 
   /* Only output the mnemonic seed if it's valid for this wallet - the old
-    wallet code generated random spend and view keys so we can't create a 
+    wallet code generated random spend and view keys so we can't create a
     mnemonic key */
   if (deterministic_private_keys) {
     std::cout << "Mnemonic seed: " << generate_mnemonic(keys.spendSecretKey) << std::endl;
@@ -1287,11 +1287,11 @@ bool pool_wallet::show_blockchain_height(const std::vector<std::string>& args) {
 bool pool_wallet::confirmTransaction(TransferCommand cmd, bool multiAddress) {
   std::string feeString;
 
-  /* 10 shells = 0.1 TRTL */
+  /* 10 shells = 0.1 STZ */
   if (cmd.fee == 10) {
-    feeString = "0.1 TRTL (minimum)";
+    feeString = "0.1 STZ (minimum)";
   } else {
-    feeString = m_currency.formatAmount(cmd.fee) + " TRTL";
+    feeString = m_currency.formatAmount(cmd.fee) + " STZ";
   }
 
   std::string walletName = boost::filesystem::change_extension(m_wallet_file, "").string();
@@ -1300,7 +1300,7 @@ bool pool_wallet::confirmTransaction(TransferCommand cmd, bool multiAddress) {
 
   if (!multiAddress) {
     std::cout << "You are sending " << m_currency.formatAmount(cmd.dsts[0].amount)
-              << " TRTL, with a fee of " << feeString << std::endl
+              << " STZ, with a fee of " << feeString << std::endl
               << "FROM: " << walletName << std::endl
               << "TO: " << std::endl << cmd.dsts[0].address << std::endl
               << std::endl;
@@ -1312,7 +1312,7 @@ bool pool_wallet::confirmTransaction(TransferCommand cmd, bool multiAddress) {
 
     for (auto destination : cmd.dsts) {
       std::cout << "You are sending " << m_currency.formatAmount(destination.amount)
-                << " TRTL" << std::endl << "FROM: " << walletName << std::endl
+                << " STZ" << std::endl << "FROM: " << walletName << std::endl
                 << "TO: " << std::endl << destination.address << std::endl
                 << std::endl;
     }
@@ -1442,7 +1442,7 @@ bool pool_wallet::print_outputs_from_transaction(const std::vector<std::string>&
   std::string transactionHashString = args[0];
   boost::algorithm::trim(transactionHashString);
   size_t size;
-  
+
   if (!Common::fromHex(transactionHashString, &transactionHash, sizeof(transactionHash), size))
   {
     logger(ERROR, BRIGHT_RED) << "Failed to parse - please ensure you entered the hash correctly.";
@@ -1503,15 +1503,15 @@ bool pool_wallet::print_outputs_from_transaction(const std::vector<std::string>&
 
     if (targetPubKey.key == outputPublicKey)
     {
-      uint64_t amount = ourTransaction.outputs[i].output.amount; 
+      uint64_t amount = ourTransaction.outputs[i].output.amount;
 
-      std::string trtl = m_currency.formatAmount(amount);
+      std::string stz = m_currency.formatAmount(amount);
 
       sum += amount;
 
       found = true;
 
-      logger(INFO, GREEN) << "The transaction output of " << trtl << " TRTL belongs to you!";
+      logger(INFO, GREEN) << "The transaction output of " << stz << " STZ belongs to you!";
     }
   }
 
@@ -1521,9 +1521,9 @@ bool pool_wallet::print_outputs_from_transaction(const std::vector<std::string>&
   }
   else
   {
-    std::string trtl = m_currency.formatAmount(sum);
+    std::string stz = m_currency.formatAmount(sum);
 
-    logger(INFO, GREEN) << "Outputs totalling " << trtl << " TRTL were sent to your wallet!";
+    logger(INFO, GREEN) << "Outputs totalling " << stz << " STZ were sent to your wallet!";
   }
 
   return true;
@@ -1614,11 +1614,11 @@ int main(int argc, char* argv[]) {
 
   logManager.configure(buildLoggerConfiguration(logLevel, Common::ReplaceExtenstion(argv[0], ".log")));
 
-  std::cout << "TurtleCoin v" << PROJECT_VERSION << " Poolwallet" << std::endl;
+  std::cout << "Stutz v" << PROJECT_VERSION << " Poolwallet" << std::endl;
 
   std::cout << "Please note that usage of simplewallet/poolwallet has been "
             << "deprecated for pool usage." << std::endl
-            << "If you are using turtle-pool, you can trivially transfer to "
+            << "If you are using stutze-pool, you can trivially transfer to "
             << "walletd by following these instructions:" << std::endl
             << "https://github.com/turtlecoin/turtle-pool/pull/5" << std::endl;
 
@@ -1748,5 +1748,3 @@ int main(int argc, char* argv[]) {
   return 1;
   //CATCH_ENTRY_L0("main", 1);
 }
-
-
