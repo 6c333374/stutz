@@ -94,7 +94,7 @@ bool Currency::generateGenesisBlock() {
   //std::string hex_tx_represent = Common::toHex(txb);
 
   // Hard code coinbase tx in genesis block, because through generating tx use random, but genesis should be always the same
-  std::string genesisCoinbaseTxHex = "010a01ff000188f3b501029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210142694232c5b04151d9e4c27d31ec7a68ea568b19488cfcb422659a07a0e44dd5";
+  std::string genesisCoinbaseTxHex = "012801ff00018094ebdc030275dde2d9498948bfdf616ae7d854e8f8875b5051d1db426b9b058f9f155dc5f821016ad57f4910177d72f852e76d67086f01cd72b9617d3741a773c81e85fe2edfa2";
   BinaryArray minerTxBlob;
 
   bool r =
@@ -353,7 +353,7 @@ bool Currency::isAmountApplicableInFusionTransactionInput(uint64_t amount, uint6
   auto it = std::lower_bound(PRETTY_AMOUNTS.begin(), PRETTY_AMOUNTS.end(), amount);
   if (it == PRETTY_AMOUNTS.end() || amount != *it) {
     return false;
-  } 
+  }
 
   amountPowerOfTen = static_cast<uint8_t>(std::distance(PRETTY_AMOUNTS.begin(), it) / 9);
   return true;
@@ -802,7 +802,7 @@ Transaction CurrencyBuilder::generateGenesisTransaction() {
 }
  Transaction CurrencyBuilder::generateGenesisTransaction(const std::vector<AccountPublicAddress>& targets) {
     assert(!targets.empty());
- 
+
     CryptoNote::Transaction tx;
     tx.inputs.clear();
     tx.outputs.clear();

@@ -1343,7 +1343,7 @@ void findNewTransactions(CryptoNote::INode &node,
             if (stuckCounter > 20)
             {
                 std::string warning =
-                    "Syncing may be stuck. Try restarting stutzd.\n"
+                    "Syncing may be stuck. Try restarting stutzd.\n";
                 std::cout << WarningMsg(warning) << std::endl;
             }
             else if (stuckCounter > 19)
